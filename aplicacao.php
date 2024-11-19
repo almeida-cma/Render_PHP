@@ -1,64 +1,80 @@
 <?php
 session_start();
+
+// Verifica se o usuário está logado
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.html");
     exit();
 }
 
+// Inclui a conexão com o banco de dados
 include 'conexao.php';
+
+// Função para filtrar dados de entrada, prevenindo SQL injection
+function filtrarEntrada($dados)
+{
+    global $conexao;
+    return mysqli_real_escape_string($conexao, htmlspecialchars(trim($dados)));
+}
 
 // Adicionar nova questão
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['adicionar'])) {
-    $assunto = $_POST['assunto'];
-    $enunciado = $_POST['enunciado'];
-    $alternativa1 = $_POST['alternativa1'];
-    $alternativa2 = $_POST['alternativa2'];
-    $alternativa3 = $_POST['alternativa3'];
-    $alternativa4 = $_POST['alternativa4'];
-    $alternativa5 = $_POST['alternativa5'];
-    $alternativa_correta = $_POST['alternativa_correta'];
+    $assunto = filtrarEntrada($_POST['assunto']);
+    $enunciado = filtrarEntrada($_POST['enunciado']);
+    $alternativa1 = filtrarEntrada($_POST['alternativa1']);
+    $alternativa2 = filtrarEntrada($_POST['alternativa2']);
+    $alternativa3 = filtrarEntrada($_POST['alternativa3']);
+    $alternativa4 = filtrarEntrada($_POST['alternativa4']);
+    $alternativa5 = filtrarEntrada($_POST['alternativa5']);
+    $alternativa_correta = filtrarEntrada($_POST['alternativa_correta']);
 
     $sql = "INSERT INTO questoes (assunto, enunciado, alternativa1, alternativa2, alternativa3, alternativa4, alternativa5, alternativa_correta)
             VALUES ('$assunto', '$enunciado', '$alternativa1', '$alternativa2', '$alternativa3', '$alternativa4', '$alternativa5', '$alternativa_correta')";
 
     if ($conexao->query($sql) === TRUE) {
-        echo "Questão adicionada com sucesso!";
+        echo "<script>alert('Questão adicionada com sucesso!');</script>";
     } else {
-        echo "Erro: " . $sql . "<br>" . $conexao->error;
+        echo "<script>alert('Erro ao adicionar questão: " . $conexao->error . "');</script>";
     }
 }
 
 // Editar questão existente
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editar'])) {
-    $id = $_POST['id'];
-    $assunto = $_POST['assunto'];
-    $enunciado = $_POST['enunciado'];
-    $alternativa1 = $_POST['alternativa1'];
-    $alternativa2 = $_POST['alternativa2'];
-    $alternativa3 = $_POST['alternativa3'];
-    $alternativa4 = $_POST['alternativa4'];
-    $alternativa5 = $_POST['alternativa5'];
-    $alternativa_correta = $_POST['alternativa_correta'];
+    $id = filtrarEntrada($_POST['id']);
+    $assunto = filtrarEntrada($_POST['assunto']);
+    $enunciado = filtrarEntrada($_POST['enunciado']);
+    $alternativa1 = filtrarEntrada($_POST['alternativa1']);
+    $alternativa2 = filtrarEntrada($_POST['alternativa2']);
+    $alternativa3 = filtrarEntrada($_POST['alternativa3']);
+    $alternativa4 = filtrarEntrada($_POST['alternativa4']);
+    $alternativa5 = filtrarEntrada($_POST['alternativa5']);
+    $alternativa_correta = filtrarEntrada($_POST['alternativa_correta']);
 
-    $sql = "UPDATE questoes SET assunto='$assunto', enunciado='$enunciado', alternativa1='$alternativa1', alternativa2='$alternativa2',
-            alternativa3='$alternativa3', alternativa4='$alternativa4', alternativa5='$alternativa5',
-            alternativa_correta='$alternativa_correta' WHERE id=$id";
+    $sql = "UPDATE questoes 
+            SET assunto='$assunto', enunciado='$enunciado', alternativa1='$alternativa1', alternativa2='$alternativa2',
+                alternativa3='$alternativa3', alternativa4='$alternativa4', alternativa5='$alternativa5', 
+                alternativa_correta='$alternativa_correta' 
+            WHERE id=$id";
 
     if ($conexao->query($sql) === TRUE) {
-        echo "Questão atualizada com sucesso!";
         header("Location: aplicacao.php");
         exit();
     } else {
-        echo "Erro: " . $sql . "<br>" . $conexao->error;
+        echo "<script>alert('Erro ao atualizar questão: " . $conexao->error . "');</script>";
     }
 }
 
 // Deletar questão
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deletar'])) {
-    $id = $_POST['id'];
-    $conexao->query("DELETE FROM questoes WHERE id=$id");
-    header("Location: aplicacao.php");
-    exit();
+    $id = filtrarEntrada($_POST['id']);
+    $sql = "DELETE FROM questoes WHERE id=$id";
+
+    if ($conexao->query($sql) === TRUE) {
+        header("Location: aplicacao.php");
+        exit();
+    } else {
+        echo "<script>alert('Erro ao deletar questão: " . $conexao->error . "');</script>";
+    }
 }
 
 // Obter assuntos únicos para o filtro
@@ -67,7 +83,7 @@ $assuntos_resultado = $conexao->query("SELECT DISTINCT assunto FROM questoes");
 // Filtro de assunto
 $filtro_assunto = '';
 if (isset($_POST['filtro_assunto'])) {
-    $filtro_assunto = $_POST['filtro_assunto'];
+    $filtro_assunto = filtrarEntrada($_POST['filtro_assunto']);
 }
 
 // Obter todas as questões, aplicando filtro se necessário
@@ -80,7 +96,7 @@ $resultado = $conexao->query($sql);
 // Carregar dados da questão para edição
 $questao = null;
 if (isset($_POST['load_editar'])) {
-    $id = $_POST['id'];
+    $id = filtrarEntrada($_POST['id']);
     $questao = $conexao->query("SELECT * FROM questoes WHERE id=$id")->fetch_assoc();
 }
 ?>
@@ -89,6 +105,7 @@ if (isset($_POST['load_editar'])) {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Banco de Questões</title>
     <style>
         * {
