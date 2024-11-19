@@ -84,7 +84,6 @@ if (isset($_POST['load_editar'])) {
     $questao = $conexao->query("SELECT * FROM questoes WHERE id=$id")->fetch_assoc();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -342,7 +341,6 @@ if (isset($_POST['load_editar'])) {
 </body>
 
 </html>
-
 <?php
 $conexao->close();
 ?>
